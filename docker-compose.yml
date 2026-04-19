@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+  openclaw:
+    image: ghcr.io/openclaw/openclaw:latest 
+    container_name: openclaw-gateway
+    restart: unless-stopped
+    environment:
+      - OPENCLAW_LOG_LEVEL=info
+      - GATEWAY_TOKEN=${GATEWAY_TOKEN}
+    volumes:
+      - ./openclaw-data:/app/data
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:18789/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    mem_limit: 1g
+    pids_limit: 256
+    networks:
+      - openclaw-net
+
+  caddy:
+    image: caddy:latest
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./data/caddy_data:/data
+      - ./data/caddy_config:/config
+    networks:
+      - openclaw-net
+
+networks:
+  openclaw-net:
+    driver: bridge
+
+
+
